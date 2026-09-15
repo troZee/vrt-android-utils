@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "sdk": {
     "directory": ".android-sdk",
-    "commandLineToolsVersion": "16111833",
+    "commandLineToolsVersion": "15859902",
     "channel": "stable",
     "platform": "35",
     "buildToolsVersion": "35.0.0"
