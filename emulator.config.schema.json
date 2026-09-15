@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/vrt-android-utils/emulator.config.schema.json",
+  "title": "VRT Android emulator configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "sdk", "emulator", "systemImage", "avd", "launch"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "sdk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["directory", "commandLineToolsVersion", "channel", "platform", "buildToolsVersion"],
+      "properties": {
+        "directory": { "type": "string", "minLength": 1 },
+        "commandLineToolsVersion": { "type": "string", "pattern": "^[0-9]+$" },
+        "channel": { "enum": ["stable", "beta", "dev", "canary"] },
+        "platform": { "type": "string", "minLength": 1 },
+        "buildToolsVersion": { "type": "string", "minLength": 1 }
+      }
+    },
+    "emulator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "buildId"],
+      "properties": {
+        "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "buildId": { "type": "string", "pattern": "^[0-9]+$" }
+      }
+    },
+    "systemImage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["apiLevel", "target", "revision", "architectureByHost"],
+      "properties": {
+        "apiLevel": { "type": "string", "minLength": 1 },
+        "target": { "type": "string", "minLength": 1 },
+        "revision": { "type": "string", "pattern": "^[0-9]+(?:\\.[0-9]+){0,2}$" },
+        "architectureByHost": {
+          "type": "object",
+          "additionalProperties": { "enum": ["x86", "x86_64", "arm64-v8a"] },
+          "minProperties": 1
+        }
+      }
+    },
+    "avd": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "device", "cores", "ramSize", "heapSize", "diskSize", "hardwareKeyboard", "forceRecreate"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+$" },
+        "device": { "type": "string", "minLength": 1 },
+        "cores": { "type": "integer", "minimum": 1 },
+        "ramSize": { "$ref": "#/$defs/size" },
+        "heapSize": { "$ref": "#/$defs/size" },
+        "diskSize": { "$ref": "#/$defs/size" },
+        "hardwareKeyboard": { "type": "boolean" },
+        "forceRecreate": { "type": "boolean" }
+      }
+    },
+    "launch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["port", "bootTimeoutSeconds", "headless", "gpu", "noSnapshot", "noAudio", "noBootAnimation", "disableAnimations", "disableSpellChecker", "extraArgs"],
+      "properties": {
+        "port": { "type": "integer", "minimum": 5554, "maximum": 5584, "multipleOf": 2 },
+        "bootTimeoutSeconds": { "type": "integer", "minimum": 1 },
+        "headless": { "type": "boolean" },
+        "gpu": { "type": "string", "minLength": 1 },
+        "noSnapshot": { "type": "boolean" },
+        "noAudio": { "type": "boolean" },
+        "noBootAnimation": { "type": "boolean" },
+        "disableAnimations": { "type": "boolean" },
+        "disableSpellChecker": { "type": "boolean" },
+        "extraArgs": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  },
+  "$defs": {
+    "size": { "type": "string", "pattern": "^[1-9][0-9]*[KMG]$" }
+  }
+}

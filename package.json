@@ -1,0 +1,18 @@
+{
+  "name": "vrt-android-utils",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Deterministic Android emulator setup for local development and CI",
+  "bin": {
+    "vrt-emulator": "bin/vrt-emulator"
+  },
+  "scripts": {
+    "test": "node --test",
+    "validate": "node src/cli.mjs validate"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}

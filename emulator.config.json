@@ -1,0 +1,48 @@
+{
+  "$schema": "./emulator.config.schema.json",
+  "schemaVersion": 1,
+  "sdk": {
+    "directory": ".android-sdk",
+    "commandLineToolsVersion": "16111833",
+    "channel": "stable",
+    "platform": "35",
+    "buildToolsVersion": "35.0.0"
+  },
+  "emulator": {
+    "version": "37.1.11",
+    "buildId": "15917651"
+  },
+  "systemImage": {
+    "apiLevel": "35",
+    "target": "google_apis",
+    "revision": "9",
+    "architectureByHost": {
+      "darwin-arm64": "arm64-v8a",
+      "darwin-x64": "x86_64",
+      "linux-arm64": "arm64-v8a",
+      "linux-x64": "x86_64"
+    }
+  },
+  "avd": {
+    "name": "vrt_api_35",
+    "device": "pixel_7",
+    "cores": 2,
+    "ramSize": "2048M",
+    "heapSize": "512M",
+    "diskSize": "6G",
+    "hardwareKeyboard": true,
+    "forceRecreate": false
+  },
+  "launch": {
+    "port": 5554,
+    "bootTimeoutSeconds": 600,
+    "headless": true,
+    "gpu": "swiftshader_indirect",
+    "noSnapshot": true,
+    "noAudio": true,
+    "noBootAnimation": true,
+    "disableAnimations": true,
+    "disableSpellChecker": true,
+    "extraArgs": []
+  }
+}

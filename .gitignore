@@ -1,0 +1,3 @@
+.android-sdk/
+*.log
+.DS_Store
