@@ -15,14 +15,14 @@ test('standard Linux CI resolves x86_64 ABI', async () => {
 });
 
 test('unknown hosts fail instead of silently choosing a different image', async () => {
-  await assert.rejects(loadConfig('emulator.config.json', process.cwd(), 'win32-x64'), /no entry/);
+  await assert.rejects(loadConfig('emulator.config.json', process.cwd(), 'win32-x64'), /no valid checksum|no entry/);
 });
 
 test('odd emulator ports are rejected', () => {
   const minimal = {
     schemaVersion: 1,
     sdk: { directory: '.sdk', commandLineToolsVersion: '1', channel: 'stable', platform: '35', buildToolsVersion: '35.0.0' },
-    emulator: { version: '1.2.3', buildId: '123' },
+    emulator: { version: '1.2.3', buildId: '123', archiveSha1ByHost: { 'linux-x64': 'a'.repeat(40) } },
     systemImage: { apiLevel: '35', target: 'google_apis', revision: '1', architectureByHost: { 'linux-x64': 'x86_64' } },
     avd: { name: 'test', device: 'pixel_7', cores: 2, ramSize: '2G', heapSize: '512M', diskSize: '6G', hardwareKeyboard: true, forceRecreate: false },
     launch: { port: 5555, bootTimeoutSeconds: 1, headless: true, gpu: 'auto', noSnapshot: true, noAudio: true, noBootAnimation: true, disableAnimations: true, disableSpellChecker: true, extraArgs: [] }

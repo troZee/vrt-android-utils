@@ -10,7 +10,12 @@
   },
   "emulator": {
     "version": "37.1.11",
-    "buildId": "15917651"
+    "buildId": "15917651",
+    "archiveSha1ByHost": {
+      "darwin-arm64": "f22f44948a2b7f0a0103645b9a639290eef92426",
+      "darwin-x64": "7df8b0acbe915217dcbb576222bddfcc23e81230",
+      "linux-x64": "1b1f78891abf8ec268264356e1365c25519e8379"
+    }
   },
   "systemImage": {
     "apiLevel": "35",
@@ -19,7 +24,6 @@
     "architectureByHost": {
       "darwin-arm64": "arm64-v8a",
       "darwin-x64": "x86_64",
-      "linux-arm64": "arm64-v8a",
       "linux-x64": "x86_64"
     }
   },

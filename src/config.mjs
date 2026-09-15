@@ -47,6 +47,9 @@ export function validateConfig(config, host = hostKey()) {
   }
   if (!/^\d+$/.test(config.emulator.buildId ?? '')) fail('emulator.buildId must contain digits only');
   if (!/^\d+\.\d+\.\d+$/.test(config.emulator.version ?? '')) fail('emulator.version must be a semantic revision');
+  if (!config.emulator.archiveSha1ByHost || !/^[a-f0-9]{40}$/.test(config.emulator.archiveSha1ByHost[host] ?? '')) {
+    fail(`emulator.archiveSha1ByHost has no valid checksum for ${host}`);
+  }
   if (!config.systemImage.architectureByHost || !(host in config.systemImage.architectureByHost)) {
     fail(`systemImage.architectureByHost has no entry for ${host}`);
   }

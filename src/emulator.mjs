@@ -1,5 +1,7 @@
 import { constants } from 'node:fs';
+import { createReadStream } from 'node:fs';
 import { access, appendFile, mkdir, open, readFile, rm, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { delimiter, join } from 'node:path';
 import { spawn } from 'node:child_process';
 import { tmpdir } from 'node:os';
@@ -52,6 +54,28 @@ function emulatorArchive(config) {
   return `https://dl.google.com/android/repository/emulator-${os}_${cpu}-${config.emulator.buildId}.zip`;
 }
 
+function expectedEmulatorHostDirectory(config) {
+  const directories = {
+    'darwin-arm64': 'darwin-aarch64',
+    'darwin-x64': 'darwin-x86_64',
+    'linux-x64': 'linux-x86_64'
+  };
+  const directory = directories[config.host];
+  if (!directory) throw new Error(`No pinned emulator binary supports host ${config.host}`);
+  return join(config.sdkRoot, 'emulator', 'qemu', directory);
+}
+
+async function sha1(path) {
+  const hash = createHash('sha1');
+  await new Promise((resolve, reject) => {
+    const stream = createReadStream(path);
+    stream.on('data', chunk => hash.update(chunk));
+    stream.on('end', resolve);
+    stream.on('error', reject);
+  });
+  return hash.digest('hex');
+}
+
 async function installCommandLineTools(config) {
   const p = paths(config);
   if (await exists(p.sdkmanager)) return;
@@ -78,24 +102,79 @@ async function property(path, key) {
   return content.split(/\r?\n/).find(line => line.startsWith(`${key}=`))?.slice(key.length + 1).trim();
 }
 
+async function ensureEmulatorPackageMetadata(config, preservedMetadata) {
+  const packageXml = join(config.sdkRoot, 'emulator', 'package.xml');
+  if (await exists(packageXml)) return;
+  if (preservedMetadata) {
+    await writeFile(packageXml, preservedMetadata);
+    return;
+  }
+  const [major, minor, micro] = config.emulator.version.split('.');
+  await writeFile(packageXml, `<?xml version="1.0" encoding="UTF-8"?>
+<ns2:repository xmlns:ns2="http://schemas.android.com/repository/android/common/02" xmlns:ns5="http://schemas.android.com/repository/android/generic/02">
+  <localPackage path="emulator" obsolete="false">
+    <type-details xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns5:genericDetailsType" />
+    <revision><major>${major}</major><minor>${minor}</minor><micro>${micro}</micro></revision>
+    <display-name>Android Emulator</display-name>
+  </localPackage>
+</ns2:repository>
+`);
+}
+
 async function installPinnedEmulator(config) {
   const sourceProperties = join(config.sdkRoot, 'emulator', 'source.properties');
+  let preservedMetadata;
   if (await exists(sourceProperties)) {
     const version = await property(sourceProperties, 'Pkg.Revision');
     const build = await property(sourceProperties, 'Pkg.BuildId');
-    if (version === config.emulator.version && build?.split('/')[0] === config.emulator.buildId) return;
+    const correctHostBinary = await exists(expectedEmulatorHostDirectory(config));
+    if (version === config.emulator.version && build?.split('/')[0] === config.emulator.buildId && correctHostBinary) {
+      await ensureEmulatorPackageMetadata(config);
+      return;
+    }
+    if (!correctHostBinary) console.warn(`Installed emulator binary does not match host ${config.host}; reinstalling the pinned host artifact.`);
+    try { preservedMetadata = await readFile(join(config.sdkRoot, 'emulator', 'package.xml'), 'utf8'); } catch {}
     await rm(join(config.sdkRoot, 'emulator'), { recursive: true, force: true });
   }
   const temporary = await mkdtemp(join(tmpdir(), 'vrt-emulator-'));
   try {
     const archive = join(temporary, 'emulator.zip');
     await run('curl', ['--fail', '--location', '--retry', '3', '--output', archive, emulatorArchive(config)]);
+    const actualSha1 = await sha1(archive);
+    const expectedSha1 = config.emulator.archiveSha1ByHost[config.host];
+    if (actualSha1 !== expectedSha1) throw new Error(`Emulator archive checksum mismatch: received ${actualSha1}, expected ${expectedSha1}`);
     await run('unzip', ['-q', archive, '-d', config.sdkRoot]);
   } finally {
     await rm(temporary, { recursive: true, force: true });
   }
   const actual = await property(sourceProperties, 'Pkg.Revision');
   if (actual !== config.emulator.version) throw new Error(`Pinned emulator build resolved to ${actual}, expected ${config.emulator.version}`);
+  await ensureEmulatorPackageMetadata(config, preservedMetadata);
+}
+
+async function installationMatches(config) {
+  const p = paths(config);
+  const imageProperties = join(config.sdkRoot, 'system-images', `android-${config.systemImage.apiLevel}`, config.systemImage.target, config.architecture, 'source.properties');
+  try {
+    return await exists(p.sdkmanager)
+      && await exists(p.avdmanager)
+      && await exists(p.adb)
+      && await exists(expectedEmulatorHostDirectory(config))
+      && await property(join(config.sdkRoot, 'emulator', 'source.properties'), 'Pkg.Revision') === config.emulator.version
+      && (await property(join(config.sdkRoot, 'emulator', 'source.properties'), 'Pkg.BuildId'))?.split('/')[0] === config.emulator.buildId
+      && await property(imageProperties, 'Pkg.Revision') === config.systemImage.revision;
+  } catch {
+    return false;
+  }
+}
+
+export async function ensureInstalled(config) {
+  if (await installationMatches(config)) {
+    await ensureEmulatorPackageMetadata(config);
+    console.log(`Reusing installed SDK and native ${config.host} emulator ${config.emulator.version} (${config.emulator.buildId}).`);
+    return;
+  }
+  await install(config);
 }
 
 export async function install(config) {
@@ -132,6 +211,7 @@ export async function createAvd(config) {
   const p = paths(config);
   const env = sdkEnv(config);
   if (!(await exists(p.avdmanager))) throw new Error('SDK tools are missing; run install first');
+  await ensureEmulatorPackageMetadata(config);
   let currentFingerprint;
   try { currentFingerprint = (await readFile(p.fingerprint, 'utf8')).trim(); } catch {}
   const recreate = config.avd.forceRecreate || currentFingerprint !== config.fingerprint;
@@ -165,7 +245,7 @@ async function adb(config, args, options = {}) {
   return run(paths(config).adb, ['-s', serial(config), ...args], { env: sdkEnv(config), ...options });
 }
 
-export async function start(config) {
+export async function start(config, { visible = false } = {}) {
   const p = paths(config);
   if (!(await exists(p.avdDirectory))) throw new Error('AVD is missing; run create first');
   if (!(await exists(p.emulator))) throw new Error('Pinned emulator binary is missing; run install first');
@@ -176,7 +256,7 @@ export async function start(config) {
     if (error.message.includes('already running')) throw error;
   }
   const args = ['-port', String(config.launch.port), '-avd', config.avd.name, '-gpu', config.launch.gpu];
-  if (config.launch.headless) args.push('-no-window');
+  if (config.launch.headless && !visible) args.push('-no-window');
   if (config.launch.noSnapshot) args.push('-no-snapshot');
   if (config.launch.noAudio) args.push('-noaudio');
   if (config.launch.noBootAnimation) args.push('-no-boot-anim');
@@ -190,15 +270,42 @@ export async function start(config) {
     child.once('error', reject);
   });
   child.unref();
+  await sleep(750);
+  if (child.exitCode !== null) {
+    await log.close();
+    const tail = (await readFile(p.log, 'utf8')).split(/\r?\n/).slice(-30).join('\n');
+    throw new Error(`Emulator exited during launch with code ${child.exitCode}.\n${tail}`);
+  }
   await writeFile(p.pid, `${child.pid}\n`);
   await log.close();
-  console.log(`Started ${config.avd.name} as ${serial(config)} (PID ${child.pid}); log: ${p.log}`);
+  console.log(`Started ${config.avd.name} as ${serial(config)} (PID ${child.pid}, ${visible ? 'visible window' : 'background'}); log: ${p.log}`);
+}
+
+export async function openVisible(config) {
+  await ensureInstalled(config);
+  await createAvd(config);
+  await start(config, { visible: true });
+  try {
+    await waitForBoot(config);
+  } catch (error) {
+    await stop(config);
+    throw error;
+  }
+  console.log(`The ${config.avd.name} window is open. Run 'vrt-emulator stop' when finished.`);
 }
 
 export async function waitForBoot(config) {
   const deadline = Date.now() + config.launch.bootTimeoutSeconds * 1000;
   const p = paths(config);
   while (Date.now() < deadline) {
+    try {
+      const pid = Number.parseInt((await readFile(p.pid, 'utf8')).trim(), 10);
+      process.kill(pid, 0);
+    } catch {
+      let tail = '';
+      try { tail = (await readFile(p.log, 'utf8')).split(/\r?\n/).slice(-30).join('\n'); } catch {}
+      throw new Error(`Emulator exited before Android completed booting.${tail ? `\nEmulator log tail:\n${tail}` : ''}`);
+    }
     try {
       const result = await capture(p.adb, ['-s', serial(config), 'shell', 'getprop', 'sys.boot_completed'], { env: sdkEnv(config) });
       if (result.stdout.trim() === '1') {
@@ -222,13 +329,29 @@ export async function waitForBoot(config) {
 
 export async function stop(config) {
   const p = paths(config);
-  try { await adb(config, ['emu', 'kill']); } catch (error) { console.warn(`Could not stop ${serial(config)} through adb: ${error.message}`); }
+  let adbStopped = false;
+  try {
+    await adb(config, ['emu', 'kill']);
+    adbStopped = true;
+  } catch (error) {
+    console.warn(`Could not stop ${serial(config)} through adb: ${error.message}`);
+  }
+  if (!adbStopped) {
+    try {
+      const pid = Number.parseInt((await readFile(p.pid, 'utf8')).trim(), 10);
+      const processInfo = await capture('ps', ['-p', String(pid), '-o', 'command=']);
+      if (Number.isInteger(pid) && processInfo.stdout.includes(p.emulator)) {
+        process.kill(pid, 'SIGTERM');
+        console.log(`Stopped emulator process PID ${pid}.`);
+      }
+    } catch {}
+  }
   await rm(p.pid, { force: true });
 }
 
 export async function runWithEmulator(config, command) {
   if (!command.length) throw new Error('run requires a command after --');
-  await install(config);
+  await ensureInstalled(config);
   await createAvd(config);
   let started = false;
   let stopping = false;

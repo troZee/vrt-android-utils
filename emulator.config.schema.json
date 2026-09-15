@@ -23,10 +23,15 @@
     "emulator": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["version", "buildId"],
+      "required": ["version", "buildId", "archiveSha1ByHost"],
       "properties": {
         "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
-        "buildId": { "type": "string", "pattern": "^[0-9]+$" }
+        "buildId": { "type": "string", "pattern": "^[0-9]+$" },
+        "archiveSha1ByHost": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": { "type": "string", "pattern": "^[a-f0-9]{40}$" }
+        }
       }
     },
     "systemImage": {

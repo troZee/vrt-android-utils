@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { loadConfig } from './config.mjs';
-import { createAvd, doctor, install, runWithEmulator, start, stop, waitForBoot } from './emulator.mjs';
+import { createAvd, doctor, install, openVisible, runWithEmulator, start, stop, waitForBoot } from './emulator.mjs';
 
 function usage() {
   console.log(`Usage: vrt-emulator [--config FILE] COMMAND [-- COMMAND_ARGS...]
@@ -12,6 +12,7 @@ Commands:
   create         Create or reuse the configured AVD
   prepare        Install packages and create the AVD
   start          Start the AVD in the background
+  open           Prepare and open a visible local emulator window
   wait           Wait until Android has completed booting
   stop           Stop the configured emulator
   run -- CMD...  Prepare, start, run CMD, and always stop
@@ -38,6 +39,7 @@ async function main(argv) {
     case 'create': await createAvd(config); break;
     case 'prepare': await install(config); await createAvd(config); break;
     case 'start': await start(config); break;
+    case 'open': await openVisible(config); break;
     case 'wait': await waitForBoot(config); break;
     case 'stop': await stop(config); break;
     case 'run': {

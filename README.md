@@ -13,6 +13,16 @@ Requirements: macOS or Linux, Node.js 20+, JDK 17+, `curl`, and `unzip`.
 
 The second command installs the isolated SDK and Android user state under `.android-sdk`, creates the AVD, boots it, runs the command with `ANDROID_SERIAL` and `EMULATOR_PORT` set, and stops it even when the command fails. Nothing is installed into a developer's global Android SDK.
 
+To open a graphical emulator locally and leave it running:
+
+```sh
+./bin/vrt-emulator open
+# Use the visible emulator, then close it with:
+./bin/vrt-emulator stop
+```
+
+`open` overrides only the `headless` launch behavior implied by the command. API, image, emulator build, device profile, resources, and all other settings still come from `emulator.config.json`.
+
 For iterative local work, keep the emulator alive:
 
 ```sh
@@ -27,7 +37,7 @@ To adjust the emulator, edit `emulator.config.json` and commit the change. A con
 
 ## Reproducibility contract
 
-The config pins the emulator binary to version 37.1.11/build 15917651 and requires system-image revision 9. Installation fails if Google's repository serves a different system-image revision; it never silently accepts drift. CI caches `.android-sdk` using the config hash.
+The config pins the emulator binary to version 37.1.11/build 15917651, pins each host archive checksum, and requires system-image revision 9. Installation fails if Google's repository serves a different artifact or system-image revision; it never silently accepts drift. CI caches `.android-sdk` using the config hash.
 
 The image ABI is necessarily host-specific: Apple Silicon uses `arm64-v8a`, while standard GitHub Linux runners use `x86_64`. An ARM host cannot hardware-accelerate an x86_64 Android image. API level, image revision, Google APIs target, device profile, disk/RAM/CPU settings, port, and Android runtime settings remain identical.
 
@@ -40,6 +50,7 @@ install   install pinned SDK artifacts
 create    create/reuse the AVD
 prepare   install + create
 start     launch in the background
+open      prepare, launch a visible window, and wait until ready
 wait      wait for sys.boot_completed and apply settings
 stop      terminate the emulator
 run       full lifecycle around an arbitrary command
