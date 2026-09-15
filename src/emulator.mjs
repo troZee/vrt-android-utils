@@ -71,6 +71,16 @@ function emulatorArchive(config) {
   return `https://dl.google.com/android/repository/emulator-${os}_${cpu}-${config.emulator.buildId}.zip`;
 }
 
+export function commandLineToolsArchive(config) {
+  const platform = {
+    "darwin-arm64": "mac_arm64",
+    "darwin-x64": "mac_x86_64",
+    "linux-x64": "linux",
+  }[config.host];
+  if (!platform) throw new Error(`No pinned command-line tools support host ${config.host}`);
+  return `https://dl.google.com/android/repository/commandlinetools-${platform}-${config.sdk.commandLineToolsVersion}_latest.zip`;
+}
+
 function expectedEmulatorHostDirectory(config) {
   const directories = {
     "darwin-arm64": "darwin-aarch64",
@@ -96,12 +106,10 @@ async function sha1(path) {
 async function installCommandLineTools(config) {
   const p = paths(config);
   if (await exists(p.sdkmanager)) return;
-  const os = process.platform === "darwin" ? "mac" : process.platform === "linux" ? "linux" : null;
-  if (!os) throw new Error(`Unsupported host ${process.platform}`);
   const temporary = await mkdtemp(join(tmpdir(), "vrt-command-line-tools-"));
   try {
     const archive = join(temporary, "tools.zip");
-    const url = `https://dl.google.com/android/repository/commandlinetools-${os}_x86_64-${config.sdk.commandLineToolsVersion}_latest.zip`;
+    const url = commandLineToolsArchive(config);
     await run("curl", ["--fail", "--location", "--retry", "3", "--output", archive, url]);
     const staging = join(temporary, "unpacked");
     await mkdir(staging, { recursive: true });
