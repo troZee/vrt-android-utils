@@ -8,6 +8,9 @@
     "vrt-emulator": "bin/vrt-emulator"
   },
   "scripts": {
+    "format": "oxfmt \"**/*.mjs\"",
+    "format:check": "oxfmt --check \"**/*.mjs\"",
+    "lint": "eslint \"**/*.mjs\"",
     "test": "bun test",
     "validate": "bun src/cli.mjs validate"
   },
@@ -15,5 +18,11 @@
     "bun": ">=1.4.0"
   },
   "packageManager": "bun@1.4.0",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.10.0",
+    "globals": "^17.12.0",
+    "oxfmt": "^0.68.0"
+  }
 }
