@@ -18,7 +18,7 @@ Its strongest ideas are explicit package construction (`system-images;android-<a
 | Concern | Upstream action | This library |
 | --- | --- | --- |
 | Configuration | GitHub Action inputs, commonly duplicated in YAML | One checked-in JSON used unchanged by CLI and CI |
-| Local use | Coupled to `@actions/*` runtime | Dependency-free Node CLI |
+| Local use | Coupled to `@actions/*` runtime | Dependency-free Bun CLI |
 | Emulator version | Latest by default; optional build override | Required version and build ID |
 | System-image drift | Latest matching package is accepted | Installed revision must equal the JSON revision |
 | SDK location | Uses the runner/developer `ANDROID_HOME` | Project-isolated `.android-sdk` |

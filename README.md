@@ -4,7 +4,11 @@ One dependency-free CLI creates the same Android Virtual Device locally and in C
 
 ## Quick start
 
-Requirements: macOS or Linux, Node.js 20+, JDK 17+, `curl`, and `unzip`.
+Requirements: macOS or Linux, Bun 1.4+, JDK 17+, `curl`, and `unzip`.
+
+```sh
+bun install --frozen-lockfile
+```
 
 ```sh
 ./bin/vrt-emulator doctor
@@ -61,6 +65,6 @@ config    print the resolved configuration
 
 This implementation retains the useful lifecycle from [ReactiveCircus/android-emulator-runner](https://github.com/ReactiveCircus/android-emulator-runner): install SDK components, create an AVD, launch on an explicit even-numbered port, poll `sys.boot_completed`, normalize animations/spell-checker, run a command, and always terminate. It also retains automatic Linux software acceleration when KVM is unavailable.
 
-Unlike that GitHub-Action-specific implementation, configuration is not duplicated across workflow inputs, SDK installation is isolated, emulator builds and image revisions are checked, arguments are spawned without a shell, AVD reuse is guarded by a fingerprint, and each lifecycle step is directly usable on a developer machine.
+Unlike that GitHub-Action-specific implementation, configuration is not duplicated across workflow inputs, SDK installation is isolated, emulator builds and image revisions are checked, arguments are spawned without a shell, AVD reuse is guarded by a fingerprint, and each lifecycle step runs directly through Bun on a developer machine or CI.
 
 The detailed upstream comparison is in [`docs/android-emulator-runner-analysis.md`](./docs/android-emulator-runner-analysis.md).

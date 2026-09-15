@@ -10,6 +10,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+
+      - name: Install JavaScript dependencies
+        run: bun install --frozen-lockfile
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -28,7 +35,7 @@ jobs:
           key: android-emulator-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('emulator.config.json') }}
 
       - name: Validate shared configuration
-        run: ./bin/vrt-emulator validate
+        run: bun run validate
 
       # Replace this smoke check with the repository's instrumented-test command.
       - name: Run on the shared emulator

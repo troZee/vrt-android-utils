@@ -8,11 +8,12 @@
     "vrt-emulator": "bin/vrt-emulator"
   },
   "scripts": {
-    "test": "node --test",
-    "validate": "node src/cli.mjs validate"
+    "test": "bun test",
+    "validate": "bun src/cli.mjs validate"
   },
   "engines": {
-    "node": ">=20"
+    "bun": ">=1.4.0"
   },
+  "packageManager": "bun@1.4.0",
   "license": "MIT"
 }

@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 import { loadConfig } from './config.mjs';
 import { createAvd, doctor, install, openVisible, runWithEmulator, start, stop, waitForBoot } from './emulator.mjs';
 

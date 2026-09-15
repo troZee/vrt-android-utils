@@ -1,21 +1,20 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
+import { expect, test } from 'bun:test';
 import { loadConfig, validateConfig } from '../src/config.mjs';
 
 test('checked-in configuration resolves host-specific ABI', async () => {
   const config = await loadConfig('emulator.config.json', process.cwd(), 'darwin-arm64');
-  assert.equal(config.architecture, 'arm64-v8a');
-  assert.equal(config.systemImagePackage, 'system-images;android-35;google_apis;arm64-v8a');
-  assert.match(config.fingerprint, /^[a-f0-9]{16}$/);
+  expect(config.architecture).toBe('arm64-v8a');
+  expect(config.systemImagePackage).toBe('system-images;android-35;google_apis;arm64-v8a');
+  expect(config.fingerprint).toMatch(/^[a-f0-9]{16}$/);
 });
 
 test('standard Linux CI resolves x86_64 ABI', async () => {
   const config = await loadConfig('emulator.config.json', process.cwd(), 'linux-x64');
-  assert.equal(config.architecture, 'x86_64');
+  expect(config.architecture).toBe('x86_64');
 });
 
 test('unknown hosts fail instead of silently choosing a different image', async () => {
-  await assert.rejects(loadConfig('emulator.config.json', process.cwd(), 'win32-x64'), /no valid checksum|no entry/);
+  await expect(loadConfig('emulator.config.json', process.cwd(), 'win32-x64')).rejects.toThrow(/no valid checksum|no entry/);
 });
 
 test('odd emulator ports are rejected', () => {
@@ -27,5 +26,5 @@ test('odd emulator ports are rejected', () => {
     avd: { name: 'test', device: 'pixel_7', cores: 2, ramSize: '2G', heapSize: '512M', diskSize: '6G', hardwareKeyboard: true, forceRecreate: false },
     launch: { port: 5555, bootTimeoutSeconds: 1, headless: true, gpu: 'auto', noSnapshot: true, noAudio: true, noBootAnimation: true, disableAnimations: true, disableSpellChecker: true, extraArgs: [] }
   };
-  assert.throws(() => validateConfig(minimal, 'linux-x64'), /launch.port/);
+  expect(() => validateConfig(minimal, 'linux-x64')).toThrow(/launch.port/);
 });
