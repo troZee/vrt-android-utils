@@ -68,3 +68,7 @@ This implementation retains the useful lifecycle from [ReactiveCircus/android-em
 Unlike that GitHub-Action-specific implementation, configuration is not duplicated across workflow inputs, SDK installation is isolated, emulator builds and image revisions are checked, arguments are spawned without a shell, AVD reuse is guarded by a fingerprint, and each lifecycle step runs directly through Bun on a developer machine or CI.
 
 The detailed upstream comparison is in [`docs/android-emulator-runner-analysis.md`](./docs/android-emulator-runner-analysis.md).
+
+## GitHub Actions
+
+[`android-emulator.yml`](./.github/workflows/android-emulator.yml) installs Bun, Java, and required host tools; enables KVM; and caches the exact SDK/AVD using the emulator configuration hash. It separately caches AnyAPK 0.0.15, boots the configured emulator through the same `run` command used locally, installs the APK synchronously, requires `adb install` to return `Success`, and always stops the emulator afterward.
