@@ -29,7 +29,7 @@
   },
   "avd": {
     "name": "vrt_api_35",
-    "device": "pixel_7",
+    "device": "pixel_9",
     "cores": 2,
     "ramSize": "2048M",
     "heapSize": "512M",
