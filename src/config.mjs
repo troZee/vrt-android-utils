@@ -37,8 +37,14 @@ export async function loadConfig(
     : resolve(projectDirectory, config.sdk.directory);
   const architecture = config.systemImage.architectureByHost[host];
   const systemImagePackage = `system-images;android-${config.systemImage.apiLevel};${config.systemImage.target};${architecture}`;
+  const deviceName = config.avd.device.replace(/[^A-Za-z0-9]/g, "");
+  const avd = {
+    ...config.avd,
+    name: `${config.avd.namePrefix}_api${config.systemImage.apiLevel}_${deviceName}`,
+  };
   const resolved = {
     ...config,
+    avd,
     configPath: absolutePath,
     projectDirectory,
     sdkRoot,
@@ -52,7 +58,7 @@ export async function loadConfig(
         emulator: config.emulator,
         systemImagePackage,
         systemImageRevision: config.systemImage.revision,
-        avd: config.avd,
+        avd,
       }),
     )
     .digest("hex")
@@ -95,9 +101,12 @@ export function validateConfig(config, host = hostKey()) {
   for (const key of ["apiLevel", "target"])
     if (typeof config.systemImage[key] !== "string" || !config.systemImage[key])
       fail(`systemImage.${key} must be a non-empty string`);
-  if (!/^[A-Za-z0-9_.-]+$/.test(config.avd.name ?? "")) fail("avd.name contains unsafe characters");
+  if (!/^[A-Za-z0-9_.-]+$/.test(config.avd.namePrefix ?? ""))
+    fail("avd.namePrefix contains unsafe characters");
   if (typeof config.avd.device !== "string" || !config.avd.device)
     fail("avd.device must be a non-empty string");
+  if (!/[A-Za-z0-9]/.test(config.avd.device))
+    fail("avd.device must contain at least one letter or digit");
   if (!Number.isInteger(config.avd.cores) || config.avd.cores < 1)
     fail("avd.cores must be a positive integer");
   for (const key of ["ramSize", "heapSize", "diskSize"])
