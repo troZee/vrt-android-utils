@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import { readFile } from "node:fs/promises";
 import { loadConfig, validateConfig } from "../src/config.mjs";
 
 test("checked-in configuration resolves host-specific ABI", async () => {
@@ -11,6 +12,15 @@ test("checked-in configuration resolves host-specific ABI", async () => {
 test("standard Linux CI resolves x86_64 ABI", async () => {
   const config = await loadConfig("emulator.config.json", process.cwd(), "linux-x64");
   expect(config.architecture).toBe("x86_64");
+});
+
+test("published example matches the repository configuration", async () => {
+  const repositoryConfig = JSON.parse(await readFile("emulator.config.json", "utf8"));
+  const publishedExample = JSON.parse(await readFile("emulator.config.example.json", "utf8"));
+
+  delete repositoryConfig.$schema;
+  delete publishedExample.$schema;
+  expect(publishedExample).toEqual(repositoryConfig);
 });
 
 test("unknown hosts fail instead of silently choosing a different image", async () => {

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.invalid/vrt-android-utils/emulator.config.schema.json",
+  "$id": "https://unpkg.com/vrt-android-utils/emulator.config.schema.json",
   "title": "VRT Android emulator configuration",
   "type": "object",
   "additionalProperties": false,

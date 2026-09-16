@@ -75,4 +75,4 @@ jobs:
         run: bun run validate
 
       - name: Boot configured emulator and install AnyAPK
-        run: ./bin/vrt-emulator run -- ./scripts/install-apk-and-wait.sh "$ANYAPK_PATH"
+        run: ./src/cli.mjs run -- ./scripts/install-apk-and-wait.sh "$ANYAPK_PATH"

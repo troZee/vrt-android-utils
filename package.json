@@ -1,21 +1,52 @@
 {
   "name": "vrt-android-utils",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
   "description": "Deterministic Android emulator setup for local development and CI",
+  "author": "troZee",
   "bin": {
-    "vrt-emulator": "bin/vrt-emulator"
+    "vrt-emulator": "src/cli.mjs"
   },
+  "files": [
+    "src",
+    "emulator.config.example.json",
+    "emulator.config.schema.json"
+  ],
   "scripts": {
     "format": "oxfmt \"**/*.mjs\"",
     "format:check": "oxfmt --check \"**/*.mjs\"",
     "lint": "eslint \"**/*.mjs\"",
     "test": "bun test",
-    "validate": "bun src/cli.mjs validate"
+    "validate": "node src/cli.mjs validate",
+    "package:check": "node scripts/check-package.mjs",
+    "check": "bun run format:check && bun run lint && bun test && bun run package:check",
+    "prepublishOnly": "bun run check"
   },
   "engines": {
-    "bun": ">=1.4.0"
+    "node": ">=20"
+  },
+  "os": [
+    "darwin",
+    "linux"
+  ],
+  "keywords": [
+    "android",
+    "emulator",
+    "avd",
+    "visual-regression-testing",
+    "ci"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/troZee/vrt-android-utils.git"
+  },
+  "bugs": {
+    "url": "https://github.com/troZee/vrt-android-utils/issues"
+  },
+  "homepage": "https://github.com/troZee/vrt-android-utils#readme",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   },
   "packageManager": "bun@1.4.0",
   "license": "MIT",
