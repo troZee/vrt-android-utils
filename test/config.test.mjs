@@ -1,17 +1,27 @@
 import { expect, test } from "bun:test";
+import { readFile } from "node:fs/promises";
 import { loadConfig, validateConfig } from "../src/config.mjs";
 
 test("checked-in configuration resolves host-specific ABI", async () => {
   const config = await loadConfig("emulator.config.json", process.cwd(), "darwin-arm64");
   expect(config.architecture).toBe("arm64-v8a");
   expect(config.systemImagePackage).toBe("system-images;android-35;google_apis;arm64-v8a");
-  expect(config.avd.name).toBe("vrt_api35_pixel7");
+  expect(config.avd.name).toBe("vrt_api35_pixel9");
   expect(config.fingerprint).toMatch(/^[a-f0-9]{16}$/);
 });
 
 test("standard Linux CI resolves x86_64 ABI", async () => {
   const config = await loadConfig("emulator.config.json", process.cwd(), "linux-x64");
   expect(config.architecture).toBe("x86_64");
+});
+
+test("published example matches the repository configuration", async () => {
+  const repositoryConfig = JSON.parse(await readFile("emulator.config.json", "utf8"));
+  const publishedExample = JSON.parse(await readFile("emulator.config.example.json", "utf8"));
+
+  delete repositoryConfig.$schema;
+  delete publishedExample.$schema;
+  expect(publishedExample).toEqual(repositoryConfig);
 });
 
 test("unknown hosts fail instead of silently choosing a different image", async () => {
