@@ -30,7 +30,11 @@ yarn add --dev vrt-android-utils
 pnpm add --save-dev vrt-android-utils
 ```
 
-Do not install it globally. Invoke the project-local binary with `npx vrt-emulator`, `yarn vrt-emulator`, or `pnpm exec vrt-emulator`.
+```sh
+bun add --dev vrt-android-utils
+```
+
+Do not install it globally. Invoke the project-local binary with `npx vrt-emulator`, `yarn vrt-emulator`, `pnpm exec vrt-emulator`, or `bunx vrt-emulator`. The CLI itself runs on Node regardless of which package manager installs it; consumers do not need Bun.
 
 ## Configure
 
@@ -47,8 +51,10 @@ Edit the copy deliberately for the consuming project. In particular, review:
 - `sdk.platform` and `sdk.buildToolsVersion`
 - `emulator.version`, `emulator.buildId`, and every host archive checksum
 - `systemImage.apiLevel`, `systemImage.target`, revision, and host architectures
-- `avd.name`, device, CPU, memory, and disk settings
+- `avd.namePrefix`, device, CPU, memory, and disk settings
 - `launch.port`, timeout, GPU mode, and headless behavior
+
+The CLI derives the AVD name from `avd.namePrefix`, the API level, and the device profile. For example, prefix `my_prefix`, API 36, and device `pixel_9` produce `my_prefix_api36_pixel9`. The host-specific ABI is deliberately omitted so macOS and Linux use the same logical AVD name.
 
 Relative paths such as `sdk.directory` are resolved relative to the configuration file, not the shell's working directory. The default `.android-sdk` directory should be added to the consuming project's `.gitignore`.
 
@@ -193,6 +199,14 @@ The system-image ABI is necessarily host-specific: Apple Silicon uses `arm64-v8a
 
 An AVD fingerprint is derived from the relevant configuration. The CLI recreates the AVD when those settings change and reuses it otherwise.
 
+## Design
+
+The lifecycle is based on the useful parts of [`ReactiveCircus/android-emulator-runner`](https://github.com/ReactiveCircus/android-emulator-runner): installing SDK components, creating an AVD, launching on an explicit port, waiting for `sys.boot_completed`, normalizing runtime settings, running a command, and always stopping the emulator.
+
+Unlike a GitHub-Action-specific integration, this CLI uses the same project-owned configuration and executable locally and in CI. SDK installation is isolated, emulator builds and image revisions are verified, commands are spawned without a shell, and AVD reuse is guarded by a configuration fingerprint. See [the detailed design analysis](https://github.com/troZee/vrt-android-utils/blob/main/docs/android-emulator-runner-analysis.md).
+
+This repository's [Android emulator workflow](https://github.com/troZee/vrt-android-utils/blob/main/.github/workflows/android-emulator.yml) is a complete integration example, including KVM setup, SDK/AVD caching, and synchronous APK installation.
+
 ## Development
 
 This repository uses Bun for development tasks, but Bun is not required by package consumers:
@@ -204,7 +218,7 @@ bun run check
 
 `bun run check` runs formatting, linting, tests, a Node-runtime CLI test, and a dry-run package inspection. The npm package uses a strict `files` allowlist; no `.npmignore` is required. The package check fails if an unexpected file would be published.
 
-See [the release guide](https://github.com/troZee/vrt-android-utils/blob/main/RELEASING.md) for the release procedure. The implementation's relationship to `ReactiveCircus/android-emulator-runner` is documented in [the design analysis](https://github.com/troZee/vrt-android-utils/blob/main/docs/android-emulator-runner-analysis.md).
+See [the release guide](https://github.com/troZee/vrt-android-utils/blob/main/RELEASING.md) for the release procedure.
 
 ## License
 

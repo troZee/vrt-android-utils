@@ -28,7 +28,7 @@
     }
   },
   "avd": {
-    "name": "vrt_api_35",
+    "namePrefix": "vrt",
     "device": "pixel_9",
     "cores": 2,
     "ramSize": "2048M",
