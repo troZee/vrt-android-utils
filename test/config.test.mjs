@@ -5,6 +5,7 @@ test("checked-in configuration resolves host-specific ABI", async () => {
   const config = await loadConfig("emulator.config.json", process.cwd(), "darwin-arm64");
   expect(config.architecture).toBe("arm64-v8a");
   expect(config.systemImagePackage).toBe("system-images;android-35;google_apis;arm64-v8a");
+  expect(config.avd.name).toBe("vrt_api35_pixel7");
   expect(config.fingerprint).toMatch(/^[a-f0-9]{16}$/);
 });
 
@@ -41,7 +42,7 @@ test("odd emulator ports are rejected", () => {
       architectureByHost: { "linux-x64": "x86_64" },
     },
     avd: {
-      name: "test",
+      namePrefix: "test",
       device: "pixel_7",
       cores: 2,
       ramSize: "2G",

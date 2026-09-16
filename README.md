@@ -39,6 +39,8 @@ For iterative local work, keep the emulator alive:
 
 To adjust the emulator, edit `emulator.config.json` and commit the change. A configuration fingerprint forces AVD recreation when image or hardware settings change. `--config path/to/another.json` is available for deliberate experiments without changing the shared default.
 
+The AVD name is derived from `avd.namePrefix`, the API level, and the device profile. For example, prefix `my_prefix`, API 36, and device `pixel_9` resolve to `my_prefix_api36_pixel9`. The host-specific ABI is deliberately omitted, so macOS and Linux use the same logical AVD name.
+
 ## Reproducibility contract
 
 The config pins the emulator binary to version 37.1.11/build 15917651, pins each host archive checksum, and requires system-image revision 9. Installation fails if Google's repository serves a different artifact or system-image revision; it never silently accepts drift. CI caches `.android-sdk` using the config hash.

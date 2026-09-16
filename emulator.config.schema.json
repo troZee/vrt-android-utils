@@ -52,9 +52,9 @@
     "avd": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "device", "cores", "ramSize", "heapSize", "diskSize", "hardwareKeyboard", "forceRecreate"],
+      "required": ["namePrefix", "device", "cores", "ramSize", "heapSize", "diskSize", "hardwareKeyboard", "forceRecreate"],
       "properties": {
-        "name": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+$" },
+        "namePrefix": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+$" },
         "device": { "type": "string", "minLength": 1 },
         "cores": { "type": "integer", "minimum": 1 },
         "ramSize": { "$ref": "#/$defs/size" },
